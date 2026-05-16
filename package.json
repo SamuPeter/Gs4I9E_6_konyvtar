@@ -1,0 +1,24 @@
+{
+  "name": "gs4i9e_6_konyvtar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamuPeter/Gs4I9E_6_konyvtar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SamuPeter/Gs4I9E_6_konyvtar/issues"
+  },
+  "homepage": "https://github.com/SamuPeter/Gs4I9E_6_konyvtar#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
