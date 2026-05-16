@@ -15,8 +15,8 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email and password required' });
-    const token = await authService.login(email, password);
-    return res.json({ token });
+    const { token, user } = await authService.login(email, password);
+    return res.json({ token, user });
   } catch (err) {
     return res.status(401).json({ error: err.message });
   }
