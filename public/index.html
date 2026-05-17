@@ -13,7 +13,17 @@
       <div>
         <a href="/books">Books</a>
         <span id="nav-auth"><a href="/auth/login">Login</a></span>
-        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
+        <span id="nav-user" style="display:none">
+          <a href="/dashboard">Dashboard</a>
+          <span id="nav-admin" style="display:none">
+            <a href="/admin/">Admin Dashboard</a>
+            <a href="/admin/books">Manage Books</a>
+            <a href="/admin/loans">Manage Loans</a>
+            <a href="/admin/users">Manage Users</a>
+            <a href="/admin/borrows">Manage Borrows</a>
+          </span>
+          <a href="#" id="logout-btn">Logout</a>
+        </span>
       </div>
     </div>
   </nav>

@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"const pool = require\\('./src/config/db'\\); pool.execute\\('SELECT 1+1 as test'\\).then\\(\\([r]\\)=>{ console.log\\('DB OK', r\\); process.exit\\(0\\); }\\).catch\\(e=>{ console.error\\('DB ERR', e.message\\); process.exit\\(1\\); }\\);\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(Get-ChildItem -Path . -Recurse -Include \"*.html\", \"*.js\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\" -Filter \"*.html\" -Recurse)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-Content *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\src\" -Recurse -Type File)",
+      "Bash(Get-ChildItem C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\public\\\\admin *)",
+      "Skill(woz:woz-status)"
     ]
   }
 }

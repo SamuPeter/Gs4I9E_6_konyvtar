@@ -1,21 +1,71 @@
-const apiBase = '/api/v1';
+﻿const apiBase = '/api/v1';
+let isAdmin = false;
 
 function getToken(){return localStorage.getItem('token')}
 function setToken(t){if(t) localStorage.setItem('token', t); else localStorage.removeItem('token')}
+
+// Decode JWT token and return payload object
+function decodeToken(token) {
+  try {
+    // JWT format: header.payload.signature
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    // Decode base64url payload (middle part)
+    const payload = parts[1];
+    // Add padding if necessary
+    const padded = payload + '=='.substring(0, (4 - payload.length % 4) % 4);
+    const decoded = atob(padded);
+    const obj = JSON.parse(decoded);
+    
+    return obj;
+  } catch (err) {
+    console.error('Failed to decode token:', err);
+    return null;
+  }
+}
+
+// Check if current user is an admin
+function isUserAdmin() {
+  return isAdmin;
+}
 
 function updateNavigation(){
   const token = getToken();
   const navAuth = document.getElementById('nav-auth');
   const navUser = document.getElementById('nav-user');
   const logoutBtn = document.getElementById('logout-btn');
+  const adminNav = document.getElementById('nav-admin');
+  
   if(token && navUser && navAuth){
     navAuth.style.display = 'none';
     navUser.style.display = 'inline';
+    
+    // Decode token and check admin role
+    const decoded = decodeToken(token);
+    if (decoded && decoded.role === 'admin') {
+      isAdmin = true;
+      if (adminNav) {
+        adminNav.style.display = 'inline';
+      }
+    } else {
+      isAdmin = false;
+      if (adminNav) {
+        adminNav.style.display = 'none';
+      }
+    }
+    
     if(logoutBtn) logoutBtn.addEventListener('click', (e)=>{
       e.preventDefault();
       setToken(null);
+      isAdmin = false;
       location.href = '/';
     })
+  } else {
+    isAdmin = false;
+    if (adminNav) {
+      adminNav.style.display = 'none';
+    }
   }
 }
 
@@ -190,6 +240,101 @@ async function loadAdminDashboard(){
   }
 }
 
+// Edit book - shows inline form modal
+async function editBook(bookId) {
+  try {
+    // Fetch current book details
+    const book = await apiFetch('/books/' + bookId);
+    if (!book) {
+      alert('Book not found');
+      return;
+    }
+
+    // Create modal/form
+    const modal = el('div', {
+      style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000'
+    }, []);
+
+    const form = el('div', {
+      cls: 'card',
+      style: 'max-width:500px;width:90%;padding:24px'
+    }, []);
+
+    form.appendChild(el('h2', {}, 'Edit Book'));
+
+    const titleGroup = el('div', { style: 'margin-bottom:16px' }, []);
+    titleGroup.appendChild(el('label', { style: 'display:block;margin-bottom:8px' }, 'Title'));
+    const titleInput = el('input', { type: 'text', cls: 'input', value: book.title || '', style: 'width:100%;box-sizing:border-box' }, []);
+    titleGroup.appendChild(titleInput);
+    form.appendChild(titleGroup);
+
+    const authorGroup = el('div', { style: 'margin-bottom:16px' }, []);
+    authorGroup.appendChild(el('label', { style: 'display:block;margin-bottom:8px' }, 'Author'));
+    const authorInput = el('input', { type: 'text', cls: 'input', value: book.author || '', style: 'width:100%;box-sizing:border-box' }, []);
+    authorGroup.appendChild(authorInput);
+    form.appendChild(authorGroup);
+
+    const descGroup = el('div', { style: 'margin-bottom:16px' }, []);
+    descGroup.appendChild(el('label', { style: 'display:block;margin-bottom:8px' }, 'Description'));
+    const descInput = el('textarea', { cls: 'input', style: 'width:100%;box-sizing:border-box;min-height:80px' }, book.description || '');
+    descGroup.appendChild(descInput);
+    form.appendChild(descGroup);
+
+    const availGroup = el('div', { style: 'margin-bottom:24px;display:flex;align-items:center' }, []);
+    const availCheckbox = el('input', { type: 'checkbox', checked: book.available == 1 || book.available === true ? 'checked' : '', style: 'margin-right:8px' }, []);
+    availGroup.appendChild(availCheckbox);
+    availGroup.appendChild(el('label', {}, 'Available'));
+    form.appendChild(availGroup);
+
+    const buttonGroup = el('div', { style: 'display:flex;gap:8px;justify-content:flex-end' }, []);
+    
+    const saveBtn = el('button', { cls: 'button', style: 'background:#4CAF50' }, 'Save');
+    saveBtn.addEventListener('click', async () => {
+      try {
+        const updateData = {
+          title: titleInput.value.trim(),
+          author: authorInput.value.trim(),
+          description: descInput.value.trim(),
+          available: availCheckbox.checked ? 1 : 0
+        };
+
+        if (!updateData.title) {
+          alert('Title is required');
+          return;
+        }
+
+        await apiFetch('/books/' + bookId, {
+          method: 'PUT',
+          body: JSON.stringify(updateData)
+        });
+
+        alert('Book updated successfully');
+        document.body.removeChild(modal);
+        loadAdminBooks();
+      } catch (e) {
+        if (e.status === 403) {
+          alert('Permission denied: only admins can edit books');
+        } else {
+          alert('Error updating book: ' + e.message);
+        }
+      }
+    });
+    buttonGroup.appendChild(saveBtn);
+
+    const cancelBtn = el('button', { cls: 'button', style: 'background:#999' }, 'Cancel');
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    buttonGroup.appendChild(cancelBtn);
+
+    form.appendChild(buttonGroup);
+    modal.appendChild(form);
+    document.body.appendChild(modal);
+  } catch (e) {
+    alert('Error loading book: ' + e.message);
+  }
+}
+
 async function loadAdminBooks(){
   try{
     const rows = await apiFetch('/books');
@@ -204,14 +349,23 @@ async function loadAdminBooks(){
       tr.appendChild(el('td',{},b.available == 1 || b.available === true ? 'Available' : 'Borrowed'));
       const actionTd = el('td',{},[]);
       const editBtn = el('button',{cls:'button'},'Edit');
-      editBtn.addEventListener('click', ()=>{ alert('Edit not implemented yet') });
+      editBtn.addEventListener('click', () => {
+        editBook(b.id);
+      });
       const delBtn = el('button',{cls:'button'},'Delete');
       delBtn.addEventListener('click', async ()=>{
-        if(!confirm('Delete this book?')) return;
+        if(!confirm('Are you sure you want to delete this book?')) return;
         try{
           await apiFetch('/books/' + b.id, {method:'DELETE'});
-          alert('Deleted'); location.reload();
-        }catch(e){alert('Delete failed: '+e.message)}
+          alert('Book deleted successfully');
+          loadAdminBooks();
+        }catch(e){
+          if(e.status === 403) {
+            alert('Permission denied: only admins can delete books');
+          } else {
+            alert('Delete failed: '+e.message);
+          }
+        }
       });
       actionTd.appendChild(editBtn);
       actionTd.appendChild(document.createTextNode(' '));
@@ -246,6 +400,95 @@ async function loadAdminLoans(){
   }
 }
 
+
+// Add new book - shows form modal
+async function addBook() {
+  try {
+    // Create modal/form
+    const modal = el('div', {
+      style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000'
+    }, []);
+
+    const form = el('div', {
+      cls: 'card',
+      style: 'max-width:500px;width:90%;padding:24px'
+    }, []);
+
+    form.appendChild(el('h2', {}, 'Add New Book'));
+
+    const titleGroup = el('div', { style: 'margin-bottom:16px' }, []);
+    titleGroup.appendChild(el('label', { style: 'display:block;margin-bottom:8px' }, 'Title'));
+    const titleInput = el('input', { type: 'text', cls: 'input', placeholder: 'Enter book title', style: 'width:100%;box-sizing:border-box' }, []);
+    titleGroup.appendChild(titleInput);
+    form.appendChild(titleGroup);
+
+    const authorGroup = el('div', { style: 'margin-bottom:16px' }, []);
+    authorGroup.appendChild(el('label', { style: 'display:block;margin-bottom:8px' }, 'Author'));
+    const authorInput = el('input', { type: 'text', cls: 'input', placeholder: 'Enter author name', style: 'width:100%;box-sizing:border-box' }, []);
+    authorGroup.appendChild(authorInput);
+    form.appendChild(authorGroup);
+
+    const descGroup = el('div', { style: 'margin-bottom:16px' }, []);
+    descGroup.appendChild(el('label', { style: 'display:block;margin-bottom:8px' }, 'Description'));
+    const descInput = el('textarea', { cls: 'input', placeholder: 'Enter book description', style: 'width:100%;box-sizing:border-box;min-height:80px' }, '');
+    descGroup.appendChild(descInput);
+    form.appendChild(descGroup);
+
+    const availGroup = el('div', { style: 'margin-bottom:24px;display:flex;align-items:center' }, []);
+    const availCheckbox = el('input', { type: 'checkbox', checked: 'checked', style: 'margin-right:8px' }, []);
+    availGroup.appendChild(availCheckbox);
+    availGroup.appendChild(el('label', {}, 'Available'));
+    form.appendChild(availGroup);
+
+    const buttonGroup = el('div', { style: 'display:flex;gap:8px;justify-content:flex-end' }, []);
+    
+    const saveBtn = el('button', { cls: 'button', style: 'background:#4CAF50' }, 'Add Book');
+    saveBtn.addEventListener('click', async () => {
+      try {
+        const newBookData = {
+          title: titleInput.value.trim(),
+          author: authorInput.value.trim(),
+          description: descInput.value.trim(),
+          available: availCheckbox.checked ? 1 : 0
+        };
+
+        if (!newBookData.title) {
+          alert('Title is required');
+          return;
+        }
+
+        await apiFetch('/books', {
+          method: 'POST',
+          body: JSON.stringify(newBookData)
+        });
+
+        alert('Book added successfully');
+        document.body.removeChild(modal);
+        loadAdminBooks();
+      } catch (e) {
+        if (e.status === 403) {
+          alert('Permission denied: only admins can add books');
+        } else {
+          alert('Error adding book: ' + e.message);
+        }
+      }
+    });
+    buttonGroup.appendChild(saveBtn);
+
+    const cancelBtn = el('button', { cls: 'button', style: 'background:#999' }, 'Cancel');
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    buttonGroup.appendChild(cancelBtn);
+
+    form.appendChild(buttonGroup);
+    modal.appendChild(form);
+    document.body.appendChild(modal);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded',()=>{
   updateNavigation();
@@ -272,3 +515,4 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(location.pathname === '/admin/books') loadAdminBooks();
   if(location.pathname === '/admin/loans') loadAdminLoans();
 });
+

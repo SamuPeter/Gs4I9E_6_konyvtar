@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - User Management</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="./css/admin-styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="container">
+      <div><a href="/">Library System</a></div>
+      <div>
+        <a href="/admin">Admin</a>
+        <span id="nav-auth"><a href="/auth/login">Login</a></span>
+        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <aside style="float:left;width:220px;margin-right:24px">
+      <div class="card"><h3>Admin Panel</h3><nav><a href="/admin">Dashboard</a><br><a href="/admin/users" style="font-weight:bold">Users</a><br><a href="/admin/borrows">Borrows</a><br><a href="/admin/books">Books</a><br><a href="/admin/loans">Loans</a></nav></div>
+    </aside>
+    <main style="margin-left:240px">
+      <h2>User Management</h2>
+
+      <div class="admin-filters">
+        <input type="text" id="searchQuery" placeholder="Search by email" class="filter-input">
+        <select id="roleFilter" class="filter-input">
+          <option value="">All Roles</option>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <select id="statusFilter" class="filter-input">
+          <option value="">All Status</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+        <button onclick="searchUsers()" class="btn btn-primary">Search</button>
+      </div>
+
+      <div id="loading" style="display:none;">Loading...</div>
+      <div id="error" class="error-message" style="display:none;"></div>
+
+      <table class="admin-table" id="usersTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+        </tbody>
+      </table>
+
+      <div class="pagination" id="pagination"></div>
+    </main>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="editUserModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Edit User</h3>
+      <form id="editUserForm">
+        <input type="hidden" id="editUserId">
+        <div class="form-group">
+          <label>Email:</label>
+          <input type="email" id="editEmail" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Role:</label>
+          <select id="editRole" class="form-input">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Active:</label>
+          <input type="checkbox" id="editActive">
+        </div>
+        <button type="button" onclick="saveUserChanges()" class="btn btn-primary">Save</button>
+        <button type="button" onclick="closeEditModal()" class="btn">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div id="resetPasswordModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeResetModal()">&times;</span>
+      <h3>Reset Password</h3>
+      <form id="resetPasswordForm">
+        <input type="hidden" id="resetUserId">
+        <div class="form-group">
+          <label>New Password:</label>
+          <input type="password" id="newPassword" class="form-input" minlength="6" required>
+        </div>
+        <button type="button" onclick="submitResetPassword()" class="btn btn-primary">Reset</button>
+        <button type="button" onclick="closeResetModal()" class="btn">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="./js/users-manager.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Borrow Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="./css/admin-styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="container">
+      <div><a href="/">Library System</a></div>
+      <div>
+        <a href="/admin">Admin</a>
+        <span id="nav-auth"><a href="/auth/login">Login</a></span>
+        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <aside style="float:left;width:220px;margin-right:24px">
+      <div class="card"><h3>Admin Panel</h3><nav><a href="/admin">Dashboard</a><br><a href="/admin/users">Users</a><br><a href="/admin/borrows" class="active">Borrows</a><br><a href="/admin/books">Books</a><br><a href="/admin/loans">Loans</a></nav></div>
+    </aside>
+
+    <main style="margin-left:240px">
+      <h2>Borrow Dashboard</h2>
+
+      <div class="admin-filters">
+        <input type="text" id="userQuery" placeholder="Search by user email" class="filter-input">
+        <input type="text" id="itemQuery" placeholder="Search by book title" class="filter-input">
+        <select id="statusFilter" class="filter-input">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="returned">Returned</option>
+        </select>
+        <input type="date" id="fromDate" class="filter-input" title="From Date">
+        <input type="date" id="toDate" class="filter-input" title="To Date">
+        <button onclick="searchBorrows()" class="btn btn-primary">Search</button>
+      </div>
+
+      <div id="loading" style="display:none;">Loading...</div>
+      <div id="error" class="error-message" style="display:none;"></div>
+
+      <table class="admin-table" id="borrowsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User Email</th>
+            <th>Book Title</th>
+            <th>Borrowed At</th>
+            <th>Due Date</th>
+            <th>Returned At</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="borrowsTableBody">
+        </tbody>
+      </table>
+
+      <div class="pagination" id="pagination"></div>
+    </main>
+  </div>
+
+  <!-- Borrow Details Modal -->
+  <div id="borrowDetailsModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeBorrowDetailsModal()">&times;</span>
+      <h3>Borrow Details</h3>
+      <div id="borrowDetailsContent"></div>
+      <button type="button" onclick="closeBorrowDetailsModal()" class="btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Update Due Date Modal -->
+  <div id="updateDueDateModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeUpdateDueDateModal()">&times;</span>
+      <h3>Update Due Date</h3>
+      <form id="updateDueDateForm">
+        <input type="hidden" id="updateBorrowId">
+        <div class="form-group">
+          <label>New Due Date:</label>
+          <input type="datetime-local" id="newDueDate" class="form-input" required>
+        </div>
+        <button type="button" onclick="submitUpdateDueDate()" class="btn btn-primary">Update</button>
+        <button type="button" onclick="closeUpdateDueDateModal()" class="btn">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="./js/borrows-dashboard.js"></script>
+</body>
+</html>
