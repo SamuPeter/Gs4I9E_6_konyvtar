@@ -19,7 +19,7 @@ exports.borrow = async (userId, bookId, loanDays = 14) => {
     if (!book.available) throw new Error('Book not available');
 
     const dueDate = new Date(Date.now() + loanDays * 24 * 60 * 60 * 1000);
-    const loan = queryRunner.manager.create(LoanEntity, {
+    const loan = queryRunner.manager.create('Loan', {
       user_id: userId,
       book_id: bookId,
       borrowed_at: new Date(),
@@ -27,7 +27,7 @@ exports.borrow = async (userId, bookId, loanDays = 14) => {
       status: 'active'
     });
 
-    const savedLoan = await queryRunner.manager.save(loan);
+    const savedLoan = await queryRunner.manager.save('Loan', loan);
 
     await queryRunner.manager.update(BookEntity, bookId, { available: false });
 

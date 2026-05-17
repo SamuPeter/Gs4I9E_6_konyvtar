@@ -52,8 +52,8 @@ async function searchUsers(page = 1) {
     if (!response.ok) throw new Error('Failed to fetch users');
 
     const data = await response.json();
-    renderUsersTable(data.data);
-    renderPagination(data.pagination, searchUsers);
+    renderUsersTable(data.data.users);
+    renderPagination(data.data.pagination, searchUsers);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -143,7 +143,8 @@ async function openEditModal(userId) {
 
     if (!response.ok) throw new Error('Failed to fetch user');
 
-    const user = await response.json();
+    const userRes = await response.json();
+    const user = userRes.data;
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editEmail').value = user.email;
     document.getElementById('editRole').value = user.role;

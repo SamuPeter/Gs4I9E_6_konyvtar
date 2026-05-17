@@ -1,27 +1,25 @@
-const loansService = require('../services/loansService');
+﻿const loansService = require('../services/loansService');
+const { success, fail } = require('../utils/response');
 
 exports.borrow = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const bookId = req.params.bookId;
-    const loan = await loansService.borrow(userId, bookId);
-    res.status(201).json({ loan_id: loan.insertId, due_date: loan.due_date, book_status: loan.book_status });
+    const loan = await loansService.borrow(req.user.id, req.params.bookId);
+    return success(res, { loan_id: loan.insertId, due_date: loan.due_date, book_status: loan.book_status }, 'Book borrowed successfully', 201);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return fail(res, 'BORROW_FAILED', err.message, 400);
   }
 };
 
-// POST /loans/create - accept book_id in body; uses authenticated user when available
 exports.create = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : req.body.user_id;
-    if (!userId) return res.status(400).json({ error: 'user_id required' });
-    const bookId = req.body.book_id;
-    if (!bookId) return res.status(400).json({ error: 'book_id required' });
+    if (!userId) return fail(res, 'VALIDATION_ERROR', 'user_id is required');
+    const { book_id: bookId } = req.body;
+    if (!bookId) return fail(res, 'VALIDATION_ERROR', 'book_id is required');
     const loan = await loansService.borrow(userId, bookId);
-    res.status(201).json({ loan_id: loan.insertId, due_date: loan.due_date });
+    return success(res, { loan_id: loan.insertId, due_date: loan.due_date }, 'Loan created successfully', 201);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return fail(res, 'LOAN_CREATE_FAILED', err.message, 400);
   }
 };
 
@@ -30,22 +28,21 @@ exports.return = async (req, res) => {
     const loanId = parseInt(req.params.loanId, 10);
     const userId = req.user ? req.user.id : null;
     const result = await loansService.return(loanId, userId);
-    res.json({ loan_id: loanId, return_date: result.returned_at, overdue_days: result.overdue_days });
+    return success(res, { loan_id: loanId, return_date: result.returned_at, overdue_days: result.overdue_days }, 'Book returned successfully');
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return fail(res, 'RETURN_FAILED', err.message, 400);
   }
 };
 
 exports.myLoans = async (req, res) => {
   try {
-    const userId = req.user.id;
     const status = req.query.status || null;
     const page = parseInt(req.query.page, 10) || 1;
     const size = parseInt(req.query.size, 10) || 50;
-    const rows = await loansService.getByUser(userId, status, page, size);
-    res.json(rows);
+    const loans = await loansService.getByUser(req.user.id, status, page, size);
+    return success(res, loans, 'Loans retrieved successfully');
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return fail(res, 'INTERNAL_ERROR', 'Failed to retrieve loans', 500);
   }
 };
 
@@ -53,18 +50,9 @@ exports.listAll = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const size = parseInt(req.query.size, 10) || 100;
-    const rows = await loansService.listAll(page, size);
-    res.json(rows);
+    const loans = await loansService.listAll(page, size);
+    return success(res, loans, 'Loans retrieved successfully');
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-exports.listAll = async (req, res) => {
-  try {
-    const rows = await loansService.listAll();
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return fail(res, 'INTERNAL_ERROR', 'Failed to retrieve loans', 500);
   }
 };

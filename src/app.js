@@ -38,6 +38,7 @@ app.use('/api/admin', adminUsersRouter);
 app.use('/api/admin', adminBorrowsRouter);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+
 // Serve static UI files from public/
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -53,7 +54,14 @@ app.get('/admin/users', (req, res) => res.sendFile(path.join(__dirname, '..', 'p
 app.get('/admin/borrows', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'borrows.html')));
 app.get('/admin/books', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'books.html')));
 app.get('/admin/loans', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'loans.html')));
+app.get('/api-docs-json', (req, res) => { res.json(swaggerSpec);});
 
+
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ success: false, error: 'INTERNAL_ERROR', message: 'An unexpected error occurred. Please try again later.' });
+});
 const port = process.env.PORT || 3000;
 
 AppDataSource.initialize()
@@ -65,3 +73,4 @@ AppDataSource.initialize()
     console.error('TypeORM initialization error:', err);
     process.exit(1);
   });
+

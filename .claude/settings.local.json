@@ -17,7 +17,21 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\sql_scripts\" -File)",
       "Bash(Select-Object Name)",
       "Bash(Get-ChildItem \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\src\\\\routes\" -Recurse)",
-      "Bash(Get-ChildItem *)"
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Out-File *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\tests\\\\services\")",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\tests\\\\controllers\")",
+      "Bash(Write-Output \"Done\")",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\package.json\" -Raw; $content.Substring\\(0,3\\) | Format-Hex)",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\package.json\"\\); $bytes[0..4] | ForEach-Object { '{0:X2}' -f $_ })",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\package.json\"\\); $noBom = $bytes[3..\\($bytes.Length-1\\)]; [System.IO.File]::WriteAllBytes\\(\"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\package.json\", $noBom\\); Write-Output \"BOM stripped\")",
+      "Bash(claude plugin *)",
+      "mcp__plugin_woz_code__Search",
+      "mcp__plugin_woz_code__Edit"
     ]
   }
 }

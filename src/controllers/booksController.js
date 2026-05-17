@@ -1,4 +1,5 @@
-const booksService = require('../services/booksService');
+﻿const booksService = require('../services/booksService');
+const { success, fail } = require('../utils/response');
 
 exports.list = async (req, res) => {
   try {
@@ -6,46 +7,46 @@ exports.list = async (req, res) => {
       search: req.query.search || '',
       available: req.query.available === '1' || req.query.available === 'true'
     };
-    const rows = await booksService.list(filter);
-    res.json(rows);
+    const books = await booksService.list(filter);
+    return success(res, books, 'Books retrieved successfully');
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return fail(res, 'INTERNAL_ERROR', 'Failed to retrieve books', 500);
   }
 };
 
 exports.getById = async (req, res) => {
   try {
     const book = await booksService.getById(req.params.id);
-    if (!book) return res.status(404).json({ error: 'Not found' });
-    res.json(book);
+    if (!book) return fail(res, 'BOOK_NOT_FOUND', 'Book not found', 404);
+    return success(res, book, 'Book retrieved successfully');
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return fail(res, 'INTERNAL_ERROR', 'Failed to retrieve book', 500);
   }
 };
 
 exports.create = async (req, res) => {
   try {
     const result = await booksService.create(req.body);
-    res.status(201).json({ id: result.insertId });
+    return success(res, { id: result.insertId }, 'Book created successfully', 201);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return fail(res, 'BOOK_CREATE_FAILED', err.message, 400);
   }
 };
 
 exports.update = async (req, res) => {
   try {
     await booksService.update(req.params.id, req.body);
-    res.json({ ok: true });
+    return success(res, null, 'Book updated successfully');
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return fail(res, 'BOOK_UPDATE_FAILED', err.message, 400);
   }
 };
 
 exports.remove = async (req, res) => {
   try {
     await booksService.delete(req.params.id);
-    res.json({ ok: true });
+    return success(res, null, 'Book deleted successfully');
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return fail(res, 'INTERNAL_ERROR', 'Failed to delete book', 500);
   }
 };

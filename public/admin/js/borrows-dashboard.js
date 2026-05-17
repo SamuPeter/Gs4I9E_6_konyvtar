@@ -56,8 +56,8 @@ async function searchBorrows(page = 1) {
     if (!response.ok) throw new Error('Failed to fetch borrows');
 
     const data = await response.json();
-    renderBorrowsTable(data.data);
-    renderPagination(data.pagination, searchBorrows);
+    renderBorrowsTable(data.data.borrows);
+    renderPagination(data.data.pagination, searchBorrows);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -155,7 +155,8 @@ async function viewBorrowDetails(borrowId) {
 
     if (!response.ok) throw new Error('Failed to fetch borrow details');
 
-    const borrow = await response.json();
+    const borrowRes = await response.json();
+    const borrow = borrowRes.data;
     const content = document.getElementById('borrowDetailsContent');
     // Clear safely
     while (content.firstChild) content.removeChild(content.firstChild);

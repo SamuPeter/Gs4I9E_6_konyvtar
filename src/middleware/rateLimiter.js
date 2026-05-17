@@ -5,7 +5,7 @@ const authLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
+  message: { success: false, error: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests. Please wait a moment before trying again.' },
 });
 
 const apiLimiter = rateLimit({
@@ -13,7 +13,7 @@ const apiLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
+  message: { success: false, error: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests. Please wait a moment before trying again.' },
 });
 
 module.exports = { authLimiter, apiLimiter };

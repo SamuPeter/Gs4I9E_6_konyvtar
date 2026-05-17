@@ -87,7 +87,8 @@ async function loadBooksList(search='', availableOnly=false){
     let qs = '';
     if(search) qs += '?search=' + encodeURIComponent(search);
     if(availableOnly) qs += (qs ? '&' : '?') + 'available=1';
-    const rows = await apiFetch('/books' + qs);
+    const booksRes = await apiFetch('/books' + qs);
+    const rows = booksRes && booksRes.data ? booksRes.data : [];
     const grid = document.querySelector('.grid');
     if(!grid) return;
     grid.innerHTML = '';
@@ -110,7 +111,8 @@ async function loadBookDetails(){
     const m = location.pathname.match(/\/books\/(\d+)/);
     if(!m) return;
     const id = m[1];
-    const book = await apiFetch('/books/' + id);
+    const bookRes = await apiFetch('/books/' + id);
+    const book = bookRes && bookRes.data ? bookRes.data : null;
     if(!book) {alert('Book not found'); return}
     const main = document.querySelector('main.container');
     if(!main) return;
@@ -155,8 +157,8 @@ function wireAuthPages(){
         console.log('Logging in...', email);
         const res = await apiFetch('/auth/login', {method:'POST', body: JSON.stringify({email,password})});
         console.log('Login response:', res);
-        if(res && res.token) {
-          setToken(res.token);
+        if(res && res.data && res.data.token) {
+          setToken(res.data.token);
           alert('Logged in!');
           location.href = '/dashboard';
         } else {
@@ -198,7 +200,7 @@ async function loadDashboard(){
     const tbody = document.querySelector('table.table tbody');
     if(!tbody) return;
     tbody.innerHTML = '';
-    const rows = result && result.items ? result.items : (result ? (Array.isArray(result) ? result : []) : []);
+    const rows = result && result.data && result.data.items ? result.data.items : [];
     if(rows.length === 0) {tbody.innerHTML = '<tr><td colspan="5">No loans</td></tr>'; return}
     rows.forEach(r=>{
       const tr = el('tr',{},[]);
@@ -236,10 +238,10 @@ async function loadAdminDashboard(){
     const bookCount = document.getElementById('total-books');
     const loanCount = document.getElementById('active-loans');
     const userCount = document.getElementById('total-users');
-    if(bookCount) bookCount.textContent = Array.isArray(books) ? books.length : 0;
-    const loanRows = loans && loans.total !== undefined ? (loans.items || []) : (Array.isArray(loans) ? loans : []);
+    if(bookCount) bookCount.textContent = books && Array.isArray(books.data) ? books.data.length : 0;
+    const loanRows = loans && loans.data && loans.data.items ? loans.data.items : [];
     if(loanCount) loanCount.textContent = loanRows.length;
-    if(userCount) userCount.textContent = Array.isArray(users.data) ? users.data.length : 0;
+    if(userCount) userCount.textContent = users && users.data && Array.isArray(users.data.users) ? users.data.users.length : 0;
   }catch(err){
     if(err.status===401) location.href='/auth/login';
   }
@@ -248,8 +250,8 @@ async function loadAdminDashboard(){
 // Edit book - shows inline form modal
 async function editBook(bookId) {
   try {
-    // Fetch current book details
-    const book = await apiFetch('/books/' + bookId);
+    const bookRes = await apiFetch('/books/' + bookId);
+    const book = bookRes && bookRes.data ? bookRes.data : null;
     if (!book) {
       alert('Book not found');
       return;
@@ -342,7 +344,9 @@ async function editBook(bookId) {
 
 async function loadAdminBooks(){
   try{
-    const rows = await apiFetch('/books');
+    const booksRes = await apiFetch('/books');
+    const rows = booksRes && booksRes.data ? booksRes.data : null;
+    console.log('Admin books:', rows);
     const tbody = document.querySelector('table.table tbody');
     if(!tbody) return;
     tbody.innerHTML = '';
@@ -389,7 +393,7 @@ async function loadAdminLoans(){
     const tbody = document.querySelector('table.table tbody');
     if(!tbody) return;
     tbody.innerHTML = '';
-    const rows = result && result.items ? result.items : (Array.isArray(result) ? result : []);
+    const rows = result && result.data && result.data.items ? result.data.items : [];
     if(rows.length === 0) {tbody.innerHTML = '<tr><td colspan="5">No loans</td></tr>'; return}
     console.log('Admin loans:', rows);
     rows.forEach(r=>{
@@ -525,5 +529,3 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   if(location.pathname === '/admin/loans') loadAdminLoans();
 });
-
-

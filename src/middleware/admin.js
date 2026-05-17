@@ -1,5 +1,7 @@
+﻿const { fail } = require('../utils/response');
+
 module.exports = (req, res, next) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin role required' });
+  if (!req.user) return fail(res, 'UNAUTHORIZED', 'Authentication is required', 401);
+  if (req.user.role !== 'admin') return fail(res, 'FORBIDDEN', 'You do not have permission to access this resource', 403);
   next();
 };
