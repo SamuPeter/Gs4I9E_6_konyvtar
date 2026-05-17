@@ -1,42 +1,53 @@
-const pool = require('../config/db');
+﻿const AppDataSource = require('../config/data-source');
+const BookEntity = require('../entities/Book');
+
+const getBookRepo = () => AppDataSource.getRepository(BookEntity);
 
 exports.list = async (filter = {}) => {
-  let sql = 'SELECT id, title, author, description, available, created_at FROM books';
-  const params = [];
-  const conditions = [];
+  const query = getBookRepo().createQueryBuilder('b')
+    .select(['b.id', 'b.title', 'b.author', 'b.description', 'b.available', 'b.created_at']);
+
   if (filter.search) {
-    conditions.push('(title LIKE ? OR author LIKE ?)');
-    params.push(`%${filter.search}%`, `%${filter.search}%`);
+    query.andWhere('(b.title LIKE :search OR b.author LIKE :search)', {
+      search: `%${filter.search}%`
+    });
   }
+
   if (filter.available) {
-    conditions.push('available = 1');
+    query.andWhere('b.available = true');
   }
-  if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
-  sql += ' ORDER BY title';
-  const [rows] = await pool.execute(sql, params);
-  return rows;
+
+  return await query.orderBy('b.title', 'ASC').getMany();
 };
 
 exports.getById = async (id) => {
-  const [rows] = await pool.execute('SELECT id, title, author, description, available, created_at FROM books WHERE id = ?', [id]);
-  return rows[0];
+  return await getBookRepo().findOne({
+    where: { id },
+    select: ['id', 'title', 'author', 'description', 'available', 'created_at']
+  });
 };
 
 exports.create = async (data) => {
-  const [result] = await pool.execute(
-    'INSERT INTO books (title, author, description, available) VALUES (?, ?, ?, ?)',
-    [data.title, data.author, data.description || null, data.available === false ? 0 : 1]
-  );
-  return result;
+  const repo = getBookRepo();
+  const book = repo.create({
+    title: data.title,
+    author: data.author,
+    description: data.description || null,
+    available: data.available !== false
+  });
+  const result = await repo.save(book);
+  return { insertId: result.id };
 };
 
 exports.update = async (id, data) => {
-  await pool.execute(
-    'UPDATE books SET title = ?, author = ?, description = ?, available = ? WHERE id = ?',
-    [data.title, data.author, data.description || null, data.available === false ? 0 : 1, id]
-  );
+  await getBookRepo().update(id, {
+    title: data.title,
+    author: data.author,
+    description: data.description || null,
+    available: data.available !== false
+  });
 };
 
 exports.delete = async (id) => {
-  await pool.execute('DELETE FROM books WHERE id = ?', [id]);
+  await getBookRepo().delete(id);
 };

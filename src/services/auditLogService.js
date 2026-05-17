@@ -1,54 +1,50 @@
-const pool = require('../config/db');
+﻿const AppDataSource = require('../config/data-source');
+const AdminAuditLogEntity = require('../entities/AdminAuditLog');
+
+const getLogRepo = () => AppDataSource.getRepository(AdminAuditLogEntity);
 
 exports.logAction = async (adminUserId, actionType, targetId, targetType, metadata = {}) => {
   try {
-    const query = `
-      INSERT INTO admin_audit_logs (admin_user_id, action_type, target_id, target_type, metadata)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    await pool.execute(query, [adminUserId, actionType, targetId, targetType, JSON.stringify(metadata)]);
+    const repo = getLogRepo();
+    const log = repo.create({
+      admin_user_id: adminUserId,
+      action_type: actionType,
+      target_id: targetId,
+      target_type: targetType,
+      metadata
+    });
+    await repo.save(log);
   } catch (err) {
     console.error('Audit log error:', err.message);
-    // Don't throw - audit failure shouldn't block the action
   }
 };
 
 exports.getLogs = async (adminId = null, actionType = null, limit = 100, offset = 0) => {
-  let query = 'SELECT * FROM admin_audit_logs WHERE 1=1';
-  const params = [];
+  const query = getLogRepo().createQueryBuilder('l');
 
   if (adminId) {
-    query += ' AND admin_user_id = ?';
-    params.push(adminId);
+    query.andWhere('l.admin_user_id = :adminId', { adminId });
   }
   if (actionType) {
-    query += ' AND action_type = ?';
-    params.push(actionType);
+    query.andWhere('l.action_type = :actionType', { actionType });
   }
 
-  query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-  params.push(limit, offset);
-
-  const [rows] = await pool.execute(query, params);
-  return rows.map(row => ({
-    ...row,
-    metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata
-  }));
+  return await query
+    .orderBy('l.created_at', 'DESC')
+    .take(limit)
+    .skip(offset)
+    .getMany();
 };
 
 exports.getLogCount = async (adminId = null, actionType = null) => {
-  let query = 'SELECT COUNT(*) as count FROM admin_audit_logs WHERE 1=1';
-  const params = [];
+  const query = getLogRepo().createQueryBuilder('l');
 
   if (adminId) {
-    query += ' AND admin_user_id = ?';
-    params.push(adminId);
+    query.andWhere('l.admin_user_id = :adminId', { adminId });
   }
   if (actionType) {
-    query += ' AND action_type = ?';
-    params.push(actionType);
+    query.andWhere('l.action_type = :actionType', { actionType });
   }
 
-  const [rows] = await pool.execute(query, params);
-  return rows[0].count;
+  return await query.getCount();
 };

@@ -1,4 +1,5 @@
 ﻿const apiBase = '/api/v1';
+const adminApiBase = '/api';
 let isAdmin = false;
 
 function getToken(){return localStorage.getItem('token')}
@@ -73,7 +74,8 @@ async function apiFetch(path, opts={}){
   const headers = Object.assign({}, opts.headers || {}, {'Content-Type':'application/json'});
   const token = getToken();
   if(token) headers['Authorization'] = 'Bearer ' + token;
-  const res = await fetch(apiBase + path, Object.assign({}, opts, {headers}));
+  const base = path.startsWith('/admin') ? adminApiBase : apiBase;
+  const res = await fetch(base + path, Object.assign({}, opts, {headers}));
   if(!res.ok){const text = await res.text(); let msg = text; try{msg = JSON.parse(text).error || text}catch(e){}; const err = new Error(msg); err.status = res.status; throw err}
   return res.json().catch(()=>null);
 }
@@ -230,11 +232,14 @@ async function loadAdminDashboard(){
   try{
     const books = await apiFetch('/books');
     const loans = await apiFetch('/loans');
+    const users = await apiFetch('/admin/users');
     const bookCount = document.getElementById('total-books');
     const loanCount = document.getElementById('active-loans');
+    const userCount = document.getElementById('total-users');
     if(bookCount) bookCount.textContent = Array.isArray(books) ? books.length : 0;
-    const loanRows = loans && loans.items ? loans.items : (Array.isArray(loans) ? loans : []);
+    const loanRows = loans && loans.total !== undefined ? (loans.items || []) : (Array.isArray(loans) ? loans : []);
     if(loanCount) loanCount.textContent = loanRows.length;
+    if(userCount) userCount.textContent = Array.isArray(users.data) ? users.data.length : 0;
   }catch(err){
     if(err.status===401) location.href='/auth/login';
   }
@@ -386,9 +391,10 @@ async function loadAdminLoans(){
     tbody.innerHTML = '';
     const rows = result && result.items ? result.items : (Array.isArray(result) ? result : []);
     if(rows.length === 0) {tbody.innerHTML = '<tr><td colspan="5">No loans</td></tr>'; return}
+    console.log('Admin loans:', rows);
     rows.forEach(r=>{
       const tr = el('tr',{},[]);
-      tr.appendChild(el('td',{},r.user_email || r.email || 'Unknown'));
+      tr.appendChild(el('td',{},r.user_email || 'Unknown'));
       tr.appendChild(el('td',{},r.title || ''));
       tr.appendChild(el('td',{},r.borrowed_at || ''));
       tr.appendChild(el('td',{},r.returned_at || '-'));

@@ -1,92 +1,76 @@
-﻿const pool = require('../config/db');
+﻿const AppDataSource = require('../config/data-source');
+const UserEntity = require('../entities/User');
 const bcrypt = require('bcrypt');
 
+const getUserRepo = () => AppDataSource.getRepository(UserEntity);
+
 exports.listUsers = async (query = '', role = null, isActive = null, limit = 20, offset = 0) => {
-  let sql = 'SELECT id, email, role, is_active, created_at FROM users WHERE 1=1';
-  const params = [];
+  const qb = getUserRepo().createQueryBuilder('u')
+    .select(['u.id', 'u.email', 'u.role', 'u.is_active', 'u.created_at']);
 
   if (query) {
-    sql += ' AND email LIKE ?';
-    params.push(`%${query}%`);
+    qb.andWhere('u.email LIKE :query', { query: `%${query}%` });
   }
   if (role) {
-    sql += ' AND role = ?';
-    params.push(role);
+    qb.andWhere('u.role = :role', { role });
   }
   if (isActive !== null) {
-    sql += ' AND is_active = ?';
-    params.push(isActive ? 1 : 0);
+    qb.andWhere('u.is_active = :isActive', { isActive });
   }
 
-  sql += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
-
-  const [rows] = await pool.execute(sql, params);
-  return rows;
+  return await qb
+    .orderBy('u.created_at', 'DESC')
+    .take(parseInt(limit))
+    .skip(parseInt(offset))
+    .getMany();
 };
 
 exports.getUserCount = async (query = '', role = null, isActive = null) => {
-  let sql = 'SELECT COUNT(*) as count FROM users WHERE 1=1';
-  const params = [];
+  const qb = getUserRepo().createQueryBuilder('u');
 
   if (query) {
-    sql += ' AND email LIKE ?';
-    params.push(`%${query}%`);
+    qb.andWhere('u.email LIKE :query', { query: `%${query}%` });
   }
   if (role) {
-    sql += ' AND role = ?';
-    params.push(role);
+    qb.andWhere('u.role = :role', { role });
   }
   if (isActive !== null) {
-    sql += ' AND is_active = ?';
-    params.push(isActive ? 1 : 0);
+    qb.andWhere('u.is_active = :isActive', { isActive });
   }
 
-  const [rows] = await pool.execute(sql, params);
-  return rows[0].count;
+  return await qb.getCount();
 };
 
 exports.getUserById = async (id) => {
-  const [rows] = await pool.execute(
-    'SELECT id, email, role, is_active, created_at FROM users WHERE id = ?',
-    [id]
-  );
-  return rows[0];
+  return await getUserRepo().findOne({
+    where: { id },
+    select: ['id', 'email', 'role', 'is_active', 'created_at']
+  });
 };
 
 exports.updateUser = async (id, updates) => {
   const allowedFields = ['email', 'role', 'is_active'];
-  const fields = [];
-  const values = [];
+  const updateData = {};
 
   for (const field of allowedFields) {
     if (field in updates) {
-      fields.push(`${field} = ?`);
-      values.push(updates[field]);
+      updateData[field] = updates[field];
     }
   }
 
-  if (fields.length === 0) return false;
+  if (Object.keys(updateData).length === 0) return false;
 
-  values.push(id);
-  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
-  const [result] = await pool.execute(sql, values);
-
-  return result.affectedRows > 0;
+  const result = await getUserRepo().update(id, updateData);
+  return result.affected > 0;
 };
 
 exports.resetPassword = async (id, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
-  const [result] = await pool.execute(
-    'UPDATE users SET password = ? WHERE id = ?',
-    [hashedPassword, id]
-  );
-  return result.affectedRows > 0;
+  const result = await getUserRepo().update(id, { password: hashedPassword });
+  return result.affected > 0;
 };
 
 exports.deactivateUser = async (id) => {
-  const [result] = await pool.execute(
-    'UPDATE users SET is_active = FALSE WHERE id = ?',
-    [id]
-  );
-  return result.affectedRows > 0;
+  const result = await getUserRepo().update(id, { is_active: false });
+  return result.affected > 0;
 };

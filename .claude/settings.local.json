@@ -10,7 +10,14 @@
       "Bash(Get-Content *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\src\" -Recurse -Type File)",
       "Bash(Get-ChildItem C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\public\\\\admin *)",
-      "Skill(woz:woz-status)"
+      "Skill(woz:woz-status)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\src\\\\services\" -Filter \"*.js\")",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(npm install *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\sql_scripts\" -File)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\PC\\\\Gs4I9E_6_konyvtar\\\\src\\\\routes\" -Recurse)",
+      "Bash(Get-ChildItem *)"
     ]
   }
 }

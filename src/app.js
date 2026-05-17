@@ -1,6 +1,8 @@
 require('dotenv').config();
+require('reflect-metadata');
 const express = require('express');
 const path = require('path');
+const AppDataSource = require('./config/data-source');
 const authRouter = require('./routes/auth');
 const booksRouter = require('./routes/books');
 const loansRouter = require('./routes/loans');
@@ -39,4 +41,13 @@ app.get('/admin/books', (req, res) => res.sendFile(path.join(__dirname, '..', 'p
 app.get('/admin/loans', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin', 'loans.html')));
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server listening on ${port}`));
+
+AppDataSource.initialize()
+  .then(() => {
+    console.log('TypeORM initialized successfully');
+    app.listen(port, () => console.log(`Server listening on ${port}`));
+  })
+  .catch(err => {
+    console.error('TypeORM initialization error:', err);
+    process.exit(1);
+  });

@@ -50,5 +50,4 @@ const auth = require('../middleware/auth');
  *               $ref: '#/components/schemas/Error'
  */
 router.get('/users/me', auth, usersController.me);
-
 module.exports = router;

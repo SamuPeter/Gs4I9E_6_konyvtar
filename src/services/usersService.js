@@ -1,6 +1,11 @@
-const pool = require('../config/db');
+﻿const AppDataSource = require('../config/data-source');
+const UserEntity = require('../entities/User');
+
+const getUserRepo = () => AppDataSource.getRepository(UserEntity);
 
 exports.getById = async (id) => {
-  const [rows] = await pool.execute('SELECT id, email, role, created_at FROM users WHERE id = ?', [id]);
-  return rows[0];
+  return await getUserRepo().findOne({
+    where: { id },
+    select: ['id', 'email', 'role', 'created_at']
+  });
 };
