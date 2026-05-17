@@ -97,10 +97,14 @@ async function loadBooksList(search='', availableOnly=false){
       const card = el('div',{cls:'card'},[]);
       card.appendChild(el('h3',{},b.title || 'Untitled'));
       card.appendChild(el('p',{},b.author || 'Unknown'));
+      
+      const cardActions = el('div',{cls:'card-actions'},[]);
       const availStatus = b.available == 1 || b.available === true ? 'Available' : 'Borrowed';
-      card.appendChild(el('span',{cls:'badge'},availStatus));
+      cardActions.appendChild(el('span',{cls:'badge'},availStatus));
       const a = el('a',{href:'/books/'+b.id,cls:'button'},'View Details');
-      card.appendChild(a);
+      cardActions.appendChild(a);
+      
+      card.appendChild(cardActions);
       grid.appendChild(card);
     })
   }catch(err){console.error('Failed to load books:', err);}
@@ -204,22 +208,27 @@ async function loadDashboard(){
     if(rows.length === 0) {tbody.innerHTML = '<tr><td colspan="5">No loans</td></tr>'; return}
     rows.forEach(r=>{
       const tr = el('tr',{},[]);
-      tr.appendChild(el('td',{},r.title || ''));
-      tr.appendChild(el('td',{},r.borrowed_at || ''));
-      tr.appendChild(el('td',{},r.returned_at || '-'));
+      tr.appendChild(el('td',{'data-label':'Book Title'},r.title || ''));
+      tr.appendChild(el('td',{'data-label':'Borrowed At'},r.borrowed_at || ''));
+      tr.appendChild(el('td',{'data-label':'Returned At'},r.returned_at || '-'));
       const statusText = (r.status || 'active').charAt(0).toUpperCase() + (r.status || 'active').slice(1);
-      tr.appendChild(el('td',{}, el('span',{cls:'badge'}, statusText)));
-      const actionTd = el('td',{},[]);
+      const statusBadge = el('span',{cls:'badge'}, statusText);
+      tr.appendChild(el('td',{'data-label':'Status'}, statusBadge));
+      
+      const actionTd = el('td',{'data-label':'Action'},[]);
+      const actionButtonsWrapper = el('div',{cls:'action-buttons'},[]);
+      
       if(!r.returned_at || r.status === 'active'){
-        const btn = el('button',{cls:'button'},'Return');
+        const btn = el('button',{cls:'btn btn-primary'},'Return');
         btn.addEventListener('click', async ()=>{
           try{
             await apiFetch('/loans/' + r.id + '/return', {method:'PUT'});
             alert('Returned'); location.reload();
           }catch(e){alert('Return failed: '+e.message)}
         });
-        actionTd.appendChild(btn);
+        actionButtonsWrapper.appendChild(btn);
       }
+      actionTd.appendChild(actionButtonsWrapper);
       tr.appendChild(actionTd);
       tbody.appendChild(tr);
     })
@@ -353,15 +362,23 @@ async function loadAdminBooks(){
     if(!Array.isArray(rows)) {tbody.innerHTML = '<tr><td colspan="4">Error loading books</td></tr>'; return}
     rows.forEach(b=>{
       const tr = el('tr',{},[]);
-      tr.appendChild(el('td',{},b.title || ''));
-      tr.appendChild(el('td',{},b.author || ''));
-      tr.appendChild(el('td',{},b.available == 1 || b.available === true ? 'Available' : 'Borrowed'));
-      const actionTd = el('td',{},[]);
-      const editBtn = el('button',{cls:'button'},'Edit');
+      const titleTd = el('td',{'data-label':'Title'},b.title || '');
+      const authorTd = el('td',{'data-label':'Author'},b.author || '');
+      const availTd = el('td',{'data-label':'Availability'},b.available == 1 || b.available === true ? 'Available' : 'Borrowed');
+      tr.appendChild(titleTd);
+      tr.appendChild(authorTd);
+      tr.appendChild(availTd);
+      
+      const actionTd = el('td',{'data-label':'Actions'},[]);
+      const actionButtonsWrapper = el('div',{cls:'action-buttons'},[]);
+      
+      const editBtn = el('button',{cls:'btn btn-primary'},'Edit');
       editBtn.addEventListener('click', () => {
         editBook(b.id);
       });
-      const delBtn = el('button',{cls:'button'},'Delete');
+      actionButtonsWrapper.appendChild(editBtn);
+      
+      const delBtn = el('button',{cls:'btn btn-danger'},'Delete');
       delBtn.addEventListener('click', async ()=>{
         if(!confirm('Are you sure you want to delete this book?')) return;
         try{
@@ -376,9 +393,8 @@ async function loadAdminBooks(){
           }
         }
       });
-      actionTd.appendChild(editBtn);
-      actionTd.appendChild(document.createTextNode(' '));
-      actionTd.appendChild(delBtn);
+      actionButtonsWrapper.appendChild(delBtn);
+      actionTd.appendChild(actionButtonsWrapper);
       tr.appendChild(actionTd);
       tbody.appendChild(tr);
     })
@@ -398,11 +414,12 @@ async function loadAdminLoans(){
     console.log('Admin loans:', rows);
     rows.forEach(r=>{
       const tr = el('tr',{},[]);
-      tr.appendChild(el('td',{},r.user_email || 'Unknown'));
-      tr.appendChild(el('td',{},r.title || ''));
-      tr.appendChild(el('td',{},r.borrowed_at || ''));
-      tr.appendChild(el('td',{},r.returned_at || '-'));
-      tr.appendChild(el('td',{},r.status || 'active'));
+      tr.appendChild(el('td',{'data-label':'User Email'},r.user_email || 'Unknown'));
+      tr.appendChild(el('td',{'data-label':'Book Title'},r.title || ''));
+      tr.appendChild(el('td',{'data-label':'Borrowed At'},r.borrowed_at || ''));
+      tr.appendChild(el('td',{'data-label':'Returned At'},r.returned_at || '-'));
+      const statusBadge = el('span',{cls:'status '+(r.status==='active' ? 'borrowed' : 'available')},r.status || 'active');
+      tr.appendChild(el('td',{'data-label':'Status'},statusBadge));
       tbody.appendChild(tr);
     })
   }catch(err){
