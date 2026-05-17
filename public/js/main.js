@@ -224,7 +224,7 @@ async function loadDashboard(){
   }catch(e){
     if(e.status===401) return location.href='/auth/login';
     const tbody = document.querySelector('table.table tbody');
-    if(tbody) tbody.innerHTML = '<tr><td colspan="5">Error loading loans: ' + e.message + '</td></tr>';
+    if(tbody) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.setAttribute('colspan', '5'); td.textContent = 'Error loading loans: ' + e.message; tr.appendChild(td); tbody.appendChild(tr); }
   }
 }
 
@@ -518,7 +518,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   wireAuthPages();
   if(location.pathname === '/dashboard') loadDashboard();
   if(location.pathname === '/admin' || location.pathname === '/admin/') loadAdminDashboard();
-  if(location.pathname === '/admin/books') loadAdminBooks();
+  if(location.pathname === '/admin/books') {
+    loadAdminBooks();
+    const addBookBtn = document.getElementById('add-book-btn');
+    if(addBookBtn) addBookBtn.addEventListener('click', addBook);
+  }
   if(location.pathname === '/admin/loans') loadAdminLoans();
 });
+
 

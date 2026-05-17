@@ -1,8 +1,31 @@
-const express = require('express');
+﻿const express = require('express');
+const { body } = require('express-validator');
 const router = express.Router();
 const booksController = require('../controllers/booksController');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const validate = require('../middleware/validate');
+
+const bookValidation = [
+  body('title')
+    .trim()
+    .notEmpty().withMessage('Title is required')
+    .isLength({ max: 255 }).withMessage('Title must be 255 characters or fewer')
+    .escape(),
+  body('author')
+    .trim()
+    .notEmpty().withMessage('Author is required')
+    .isLength({ max: 255 }).withMessage('Author must be 255 characters or fewer')
+    .escape(),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 }).withMessage('Description must be 2000 characters or fewer')
+    .escape(),
+  body('available')
+    .optional()
+    .isBoolean().withMessage('Available must be a boolean'),
+];
 
 /**
  * @openapi
@@ -111,7 +134,7 @@ router.get('/books/:id', booksController.getById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/books', auth, admin, booksController.create);
+router.post('/books', auth, admin, bookValidation, validate, booksController.create);
 
 /**
  * @openapi
@@ -160,7 +183,7 @@ router.post('/books', auth, admin, booksController.create);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/books/:id', auth, admin, booksController.update);
+router.put('/books/:id', auth, admin, bookValidation, validate, booksController.update);
 
 /**
  * @openapi

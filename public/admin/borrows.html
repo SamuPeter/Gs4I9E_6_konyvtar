@@ -37,7 +37,7 @@
         </select>
         <input type="date" id="fromDate" class="filter-input" title="From Date">
         <input type="date" id="toDate" class="filter-input" title="To Date">
-        <button onclick="searchBorrows()" class="btn btn-primary">Search</button>
+        <button id="search-borrows-btn" class="btn btn-primary">Search</button>
       </div>
 
       <div id="loading" style="display:none;">Loading...</div>
@@ -67,17 +67,17 @@
   <!-- Borrow Details Modal -->
   <div id="borrowDetailsModal" class="modal" style="display:none;">
     <div class="modal-content">
-      <span class="close" onclick="closeBorrowDetailsModal()">&times;</span>
+      <span class="close" id="close-borrow-details-x">&times;</span>
       <h3>Borrow Details</h3>
       <div id="borrowDetailsContent"></div>
-      <button type="button" onclick="closeBorrowDetailsModal()" class="btn">Close</button>
+      <button type="button" id="close-borrow-details-btn" class="btn">Close</button>
     </div>
   </div>
 
   <!-- Update Due Date Modal -->
   <div id="updateDueDateModal" class="modal" style="display:none;">
     <div class="modal-content">
-      <span class="close" onclick="closeUpdateDueDateModal()">&times;</span>
+      <span class="close" id="close-update-due-x">&times;</span>
       <h3>Update Due Date</h3>
       <form id="updateDueDateForm">
         <input type="hidden" id="updateBorrowId">
@@ -85,8 +85,8 @@
           <label>New Due Date:</label>
           <input type="datetime-local" id="newDueDate" class="form-input" required>
         </div>
-        <button type="button" onclick="submitUpdateDueDate()" class="btn btn-primary">Update</button>
-        <button type="button" onclick="closeUpdateDueDateModal()" class="btn">Cancel</button>
+        <button type="button" id="submit-update-due-btn" class="btn btn-primary">Update</button>
+        <button type="button" id="cancel-update-due-btn" class="btn">Cancel</button>
       </form>
     </div>
   </div>

@@ -1,12 +1,36 @@
 ﻿const express = require('express');
+const { body } = require('express-validator');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
 const adminUsersController = require('../controllers/adminUsersController');
+const validate = require('../middleware/validate');
 
 // All routes require authentication and admin role
 router.use(authMiddleware);
 router.use(adminMiddleware);
+
+const updateUserValidation = [
+  body('email')
+    .optional()
+    .trim()
+    .isEmail().withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('role')
+    .optional()
+    .isIn(['user', 'admin']).withMessage('Role must be user or admin'),
+  body('is_active')
+    .optional()
+    .isBoolean().withMessage('is_active must be a boolean'),
+];
+
+const resetPasswordValidation = [
+  body('new_password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[0-9]/).withMessage('Password must contain at least one number'),
+];
 
 /**
  * @openapi
@@ -170,7 +194,7 @@ router.get('/users/:id', adminUsersController.getUser);
  *       404:
  *         description: User not found
  */
-router.put('/users/:id', adminUsersController.updateUser);
+router.put('/users/:id', updateUserValidation, validate, adminUsersController.updateUser);
 
 /**
  * @openapi
@@ -220,7 +244,7 @@ router.put('/users/:id', adminUsersController.updateUser);
  *       404:
  *         description: User not found
  */
-router.post('/users/:id/reset-password', adminUsersController.resetPassword);
+router.post('/users/:id/reset-password', resetPasswordValidation, validate, adminUsersController.resetPassword);
 
 /**
  * @openapi

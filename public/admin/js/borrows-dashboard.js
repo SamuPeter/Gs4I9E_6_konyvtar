@@ -1,6 +1,15 @@
-const API_BASE = '/api/admin';
+﻿const API_BASE = '/api/admin';
 let currentPage = 1;
 let currentLimit = 20;
+
+function escHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 function checkAdminAccess() {
   const token = localStorage.getItem('token');
@@ -58,44 +67,83 @@ async function searchBorrows(page = 1) {
 
 function renderBorrowsTable(borrows) {
   const tbody = document.getElementById('borrowsTableBody');
-  tbody.innerHTML = borrows.length ? borrows.map(borrow => {
+  // Clear existing rows safely
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+  if (!borrows || borrows.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.setAttribute('colspan', '8');
+    td.textContent = 'No borrows found';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  borrows.forEach(borrow => {
     const borrowedAt = new Date(borrow.borrowed_at).toLocaleDateString();
     const dueDate = borrow.due_date ? new Date(borrow.due_date).toLocaleDateString() : '-';
     const returnedAt = borrow.returned_at ? new Date(borrow.returned_at).toLocaleDateString() : '-';
-    return `
-      <tr>
-        <td>${borrow.id}</td>
-        <td>${borrow.user_email}</td>
-        <td>${borrow.book_title}</td>
-        <td>${borrowedAt}</td>
-        <td>${dueDate}</td>
-        <td>${returnedAt}</td>
-        <td><span class="status-badge ${borrow.status}">${borrow.status}</span></td>
-        <td>
-          <button onclick="viewBorrowDetails(${borrow.id})" class="btn btn-small">View</button>
-          ${borrow.status === 'active' ? `
-            <button onclick="openUpdateDueDateModal(${borrow.id})" class="btn btn-small">Extend</button>
-            <button onclick="markAsReturned(${borrow.id})" class="btn btn-small">Returned</button>
-          ` : ''}
-        </td>
-      </tr>
-    `;
-  }).join('') : '<tr><td colspan="8">No borrows found</td></tr>';
+    const status = escHtml(borrow.status);
+
+    const tr = document.createElement('tr');
+
+    [borrow.id, borrow.user_email, borrow.book_title, borrowedAt, dueDate, returnedAt].forEach(val => {
+      const td = document.createElement('td');
+      td.textContent = val == null ? '' : val;
+      tr.appendChild(td);
+    });
+
+    // Status cell
+    const statusTd = document.createElement('td');
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'status-badge ' + status;
+    statusSpan.textContent = borrow.status || '';
+    statusTd.appendChild(statusSpan);
+    tr.appendChild(statusTd);
+
+    // Actions cell
+    const actionTd = document.createElement('td');
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn btn-small';
+    viewBtn.textContent = 'View';
+    viewBtn.addEventListener('click', () => viewBorrowDetails(borrow.id));
+    actionTd.appendChild(viewBtn);
+
+    if (borrow.status === 'active') {
+      const extendBtn = document.createElement('button');
+      extendBtn.className = 'btn btn-small';
+      extendBtn.textContent = 'Extend';
+      extendBtn.addEventListener('click', () => openUpdateDueDateModal(borrow.id));
+      actionTd.appendChild(extendBtn);
+
+      const returnedBtn = document.createElement('button');
+      returnedBtn.className = 'btn btn-small';
+      returnedBtn.textContent = 'Returned';
+      returnedBtn.addEventListener('click', () => markAsReturned(borrow.id));
+      actionTd.appendChild(returnedBtn);
+    }
+
+    tr.appendChild(actionTd);
+    tbody.appendChild(tr);
+  });
 }
 
 function renderPagination(pagination, callback) {
   const container = document.getElementById('pagination');
-  if (pagination.pages <= 1) {
-    container.innerHTML = '';
-    return;
-  }
+  // Clear safely
+  while (container.firstChild) container.removeChild(container.firstChild);
 
-  let html = '';
+  if (pagination.pages <= 1) return;
+
   for (let i = 1; i <= pagination.pages; i++) {
-    const active = i === pagination.page ? 'active' : '';
-    html += `<button class="page-btn ${active}" onclick="searchBorrows(${i})">${i}</button>`;
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (i === pagination.page ? ' active' : '');
+    btn.textContent = i;
+    btn.addEventListener('click', () => searchBorrows(i));
+    container.appendChild(btn);
   }
-  container.innerHTML = html;
 }
 
 async function viewBorrowDetails(borrowId) {
@@ -108,30 +156,41 @@ async function viewBorrowDetails(borrowId) {
     if (!response.ok) throw new Error('Failed to fetch borrow details');
 
     const borrow = await response.json();
-    const content = `
-      <div class="detail-item">
-        <strong>ID:</strong> ${borrow.id}
-      </div>
-      <div class="detail-item">
-        <strong>User Email:</strong> ${borrow.user_email}
-      </div>
-      <div class="detail-item">
-        <strong>Book Title:</strong> ${borrow.book_title}
-      </div>
-      <div class="detail-item">
-        <strong>Borrowed At:</strong> ${new Date(borrow.borrowed_at).toLocaleString()}
-      </div>
-      <div class="detail-item">
-        <strong>Due Date:</strong> ${borrow.due_date ? new Date(borrow.due_date).toLocaleString() : '-'}
-      </div>
-      <div class="detail-item">
-        <strong>Returned At:</strong> ${borrow.returned_at ? new Date(borrow.returned_at).toLocaleString() : '-'}
-      </div>
-      <div class="detail-item">
-        <strong>Status:</strong> <span class="status-badge ${borrow.status}">${borrow.status}</span>
-      </div>
-    `;
-    document.getElementById('borrowDetailsContent').innerHTML = content;
+    const content = document.getElementById('borrowDetailsContent');
+    // Clear safely
+    while (content.firstChild) content.removeChild(content.firstChild);
+
+    const fields = [
+      ['ID', borrow.id],
+      ['User Email', borrow.user_email],
+      ['Book Title', borrow.book_title],
+      ['Borrowed At', borrow.borrowed_at ? new Date(borrow.borrowed_at).toLocaleString() : '-'],
+      ['Due Date', borrow.due_date ? new Date(borrow.due_date).toLocaleString() : '-'],
+      ['Returned At', borrow.returned_at ? new Date(borrow.returned_at).toLocaleString() : '-'],
+    ];
+
+    fields.forEach(([label, value]) => {
+      const div = document.createElement('div');
+      div.className = 'detail-item';
+      const strong = document.createElement('strong');
+      strong.textContent = label + ': ';
+      div.appendChild(strong);
+      div.appendChild(document.createTextNode(value == null ? '' : value));
+      content.appendChild(div);
+    });
+
+    // Status field with badge
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'detail-item';
+    const statusStrong = document.createElement('strong');
+    statusStrong.textContent = 'Status: ';
+    statusDiv.appendChild(statusStrong);
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'status-badge ' + escHtml(borrow.status);
+    statusSpan.textContent = borrow.status || '';
+    statusDiv.appendChild(statusSpan);
+    content.appendChild(statusDiv);
+
     document.getElementById('borrowDetailsModal').style.display = 'block';
   } catch (err) {
     showError(err.message);
@@ -224,4 +283,11 @@ function logout() {
 document.addEventListener('DOMContentLoaded', () => {
   checkAdminAccess();
   searchBorrows();
+
+  document.getElementById('search-borrows-btn').addEventListener('click', () => searchBorrows());
+  document.getElementById('close-borrow-details-x').addEventListener('click', closeBorrowDetailsModal);
+  document.getElementById('close-borrow-details-btn').addEventListener('click', closeBorrowDetailsModal);
+  document.getElementById('close-update-due-x').addEventListener('click', closeUpdateDueDateModal);
+  document.getElementById('submit-update-due-btn').addEventListener('click', submitUpdateDueDate);
+  document.getElementById('cancel-update-due-btn').addEventListener('click', closeUpdateDueDateModal);
 });

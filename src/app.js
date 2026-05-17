@@ -1,8 +1,10 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 require('reflect-metadata');
 const express = require('express');
 const path = require('path');
+const helmet = require('helmet');
 const AppDataSource = require('./config/data-source');
+const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
 const authRouter = require('./routes/auth');
 const booksRouter = require('./routes/books');
 const loansRouter = require('./routes/loans');
@@ -13,7 +15,19 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
 const app = express();
+
+// Security headers (CSP, X-Frame-Options, etc.)
+app.use(helmet());
+
 app.use(express.json());
+
+// CSRF: Not needed — all API calls use JWT in Authorization header (not cookies),
+// so cross-site requests cannot include the token.
+
+// Rate limiting
+app.use('/api/v1/auth', authLimiter);
+app.use('/api/v1', apiLimiter);
+app.use('/api/admin', apiLimiter);
 
 // API routes
 app.use('/api/v1', authRouter);

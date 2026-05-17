@@ -1,12 +1,21 @@
 ﻿const express = require('express');
+const { body } = require('express-validator');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
 const adminBorrowsController = require('../controllers/adminBorrowsController');
+const validate = require('../middleware/validate');
 
 // All routes require authentication and admin role
 router.use(authMiddleware);
 router.use(adminMiddleware);
+
+const dueDateValidation = [
+  body('due_date')
+    .notEmpty().withMessage('due_date is required')
+    .isISO8601().withMessage('due_date must be a valid ISO 8601 date')
+    .toDate(),
+];
 
 /**
  * @openapi
@@ -191,7 +200,7 @@ router.get('/borrows/:id', adminBorrowsController.getBorrow);
  *       404:
  *         description: Borrow not found
  */
-router.put('/borrows/:id/due-date', adminBorrowsController.updateDueDate);
+router.put('/borrows/:id/due-date', dueDateValidation, validate, adminBorrowsController.updateDueDate);
 
 /**
  * @openapi

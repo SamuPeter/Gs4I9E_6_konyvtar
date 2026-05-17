@@ -1,6 +1,15 @@
-const API_BASE = '/api/admin';
+﻿const API_BASE = '/api/admin';
 let currentPage = 1;
 let currentLimit = 20;
+
+function escHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 function checkAdminAccess() {
   const token = localStorage.getItem('token');
@@ -54,35 +63,75 @@ async function searchUsers(page = 1) {
 
 function renderUsersTable(users) {
   const tbody = document.getElementById('usersTableBody');
-  tbody.innerHTML = users.length ? users.map(user => `
-    <tr>
-      <td>${user.id}</td>
-      <td>${user.email}</td>
-      <td>${user.role}</td>
-      <td>${user.is_active ? 'Active' : 'Inactive'}</td>
-      <td>${new Date(user.created_at).toLocaleDateString()}</td>
-      <td>
-        <button onclick="openEditModal(${user.id})" class="btn btn-small">Edit</button>
-        <button onclick="openResetPasswordModal(${user.id})" class="btn btn-small">Reset Pwd</button>
-        <button onclick="deactivateUser(${user.id})" class="btn btn-small btn-danger">Deactivate</button>
-      </td>
-    </tr>
-  `).join('') : '<tr><td colspan="6">No users found</td></tr>';
+  // Clear existing rows safely
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+  if (!users || users.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.setAttribute('colspan', '6');
+    td.textContent = 'No users found';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  users.forEach(user => {
+    const tr = document.createElement('tr');
+
+    // id, email, role, status, created_at cells
+    [
+      user.id,
+      user.email,
+      user.role,
+      user.is_active ? 'Active' : 'Inactive',
+      new Date(user.created_at).toLocaleDateString()
+    ].forEach(val => {
+      const td = document.createElement('td');
+      td.textContent = val == null ? '' : val;
+      tr.appendChild(td);
+    });
+
+    // Actions cell — build buttons with event listeners, no innerHTML
+    const actionTd = document.createElement('td');
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-small';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => openEditModal(user.id));
+    actionTd.appendChild(editBtn);
+
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'btn btn-small';
+    resetBtn.textContent = 'Reset Pwd';
+    resetBtn.addEventListener('click', () => openResetPasswordModal(user.id));
+    actionTd.appendChild(resetBtn);
+
+    const deactivateBtn = document.createElement('button');
+    deactivateBtn.className = 'btn btn-small btn-danger';
+    deactivateBtn.textContent = 'Deactivate';
+    deactivateBtn.addEventListener('click', () => deactivateUser(user.id));
+    actionTd.appendChild(deactivateBtn);
+
+    tr.appendChild(actionTd);
+    tbody.appendChild(tr);
+  });
 }
 
 function renderPagination(pagination, callback) {
   const container = document.getElementById('pagination');
-  if (pagination.pages <= 1) {
-    container.innerHTML = '';
-    return;
-  }
+  // Clear safely
+  while (container.firstChild) container.removeChild(container.firstChild);
 
-  let html = '';
+  if (pagination.pages <= 1) return;
+
   for (let i = 1; i <= pagination.pages; i++) {
-    const active = i === pagination.page ? 'active' : '';
-    html += `<button class="page-btn ${active}" onclick="searchUsers(${i})">${i}</button>`;
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (i === pagination.page ? ' active' : '');
+    btn.textContent = i;
+    btn.addEventListener('click', () => searchUsers(i));
+    container.appendChild(btn);
   }
-  container.innerHTML = html;
 }
 
 async function openEditModal(userId) {
@@ -153,8 +202,8 @@ async function submitResetPassword() {
   const userId = document.getElementById('resetUserId').value;
   const newPassword = document.getElementById('newPassword').value;
 
-  if (newPassword.length < 6) {
-    alert('Password must be at least 6 characters');
+  if (newPassword.length < 8) {
+    alert('Password must be at least 8 characters');
     return;
   }
 
@@ -220,4 +269,12 @@ function logout() {
 document.addEventListener('DOMContentLoaded', () => {
   checkAdminAccess();
   searchUsers();
+
+  document.getElementById('search-users-btn').addEventListener('click', () => searchUsers());
+  document.getElementById('close-edit-x').addEventListener('click', closeEditModal);
+  document.getElementById('save-user-btn').addEventListener('click', saveUserChanges);
+  document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
+  document.getElementById('close-reset-x').addEventListener('click', closeResetModal);
+  document.getElementById('submit-reset-btn').addEventListener('click', submitResetPassword);
+  document.getElementById('cancel-reset-btn').addEventListener('click', closeResetModal);
 });

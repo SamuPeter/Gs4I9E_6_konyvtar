@@ -71,10 +71,6 @@ exports.resetPassword = async (req, res) => {
     const { id } = req.params;
     const { new_password } = req.body;
 
-    if (!new_password || new_password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-
     const user = await adminUsersService.getUserById(id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -109,5 +105,3 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to deactivate user' });
   }
 };
-
-
