@@ -7,18 +7,29 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+  <nav class="nav">
+    <div class="container">
+      <div><a href="/">Library System</a></div>
+      <div>
+        <a href="/admin">Admin</a>
+        <span id="nav-auth"><a href="/auth/login">Login</a></span>
+        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
+      </div>
+    </div>
+  </nav>
   <div class="container">
     <aside style="float:left;width:220px;margin-right:24px">
-      <div class="card"><h3>Admin</h3><nav><a href="/admin/books">Books</a><br><a href="/admin/loans">Loans</a></nav></div>
+      <div class="card"><h3>Admin</h3><nav><a href="/admin">Dashboard</a><br><a href="/admin/books">Books</a><br><a href="/admin/loans">Loans</a></nav></div>
     </aside>
     <main style="margin-left:240px">
       <h1>Dashboard</h1>
       <div style="display:flex;gap:16px;margin-top:12px">
-        <div class="card">Total Books<br><strong>42</strong></div>
-        <div class="card">Active Loans<br><strong>5</strong></div>
-        <div class="card">Users<br><strong>12</strong></div>
+        <div class="card">Total Books<br><strong id="total-books">-</strong></div>
+        <div class="card">Active Loans<br><strong id="active-loans">-</strong></div>
+        <div class="card">Users<br><strong id="total-users">-</strong></div>
       </div>
     </main>
   </div>
+  <script src="/js/main.js"></script>
 </body>
 </html>

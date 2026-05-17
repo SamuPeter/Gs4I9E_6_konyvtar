@@ -12,7 +12,8 @@
       <div><a href="/">Library System</a></div>
       <div>
         <a href="/books">Books</a>
-        <a href="/auth/login">Login</a>
+        <span id="nav-auth"><a href="/auth/login">Login</a></span>
+        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
       </div>
     </div>
   </nav>
@@ -24,10 +25,7 @@
     </section>
 
     <h2 style="margin-top:24px">Featured Books</h2>
-    <div class="grid" style="margin-top:16px">
-      <div class="card"> <h3>Book Title A</h3><p>Author A</p><p><span class="badge">Available</span></p><a href="/books/1" class="button">View Details</a></div>
-      <div class="card"> <h3>Book Title B</h3><p>Author B</p><p><span class="badge">Borrowed</span></p><a href="/books/2" class="button">View Details</a></div>
-    </div>
+    <div class="grid" style="margin-top:16px"></div>
   </main>
   <footer class="footer">&copy; Library System</footer>
   <script src="/js/main.js"></script>

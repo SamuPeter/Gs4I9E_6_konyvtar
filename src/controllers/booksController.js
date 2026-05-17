@@ -2,7 +2,11 @@ const booksService = require('../services/booksService');
 
 exports.list = async (req, res) => {
   try {
-    const rows = await booksService.list();
+    const filter = {
+      search: req.query.search || '',
+      available: req.query.available === '1' || req.query.available === 'true'
+    };
+    const rows = await booksService.list(filter);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

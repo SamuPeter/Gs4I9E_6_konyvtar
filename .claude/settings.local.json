@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const pool = require\\('./src/config/db'\\); pool.execute\\('SELECT 1+1 as test'\\).then\\(\\([r]\\)=>{ console.log\\('DB OK', r\\); process.exit\\(0\\); }\\).catch\\(e=>{ console.error\\('DB ERR', e.message\\); process.exit\\(1\\); }\\);\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

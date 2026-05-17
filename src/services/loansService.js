@@ -55,24 +55,23 @@ exports.getByUser = async (userId, status = null, page = 1, size = 50) => {
     where += ' AND l.status = ?';
     params.push(status);
   }
-  const [rows] = await pool.execute(
+  // pool.query() avoids the mysql2 prepared-statement bug with LIMIT/OFFSET integer params
+  const [rows] = await pool.query(
     `SELECT l.id, l.book_id, b.title, l.borrowed_at, l.due_date, l.returned_at, l.status
      FROM loans l JOIN books b ON l.book_id = b.id
      ${where} ORDER BY l.borrowed_at DESC LIMIT ? OFFSET ?`,
     params.concat([size, offset])
   );
-  // count total
-  const countParams = params.slice(0, params.length);
-  const [countRows] = await pool.execute(`SELECT COUNT(*) as total FROM loans l ${where}`, countParams);
+  const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM loans l ${where}`, params);
   return { items: rows, total: countRows[0].total };
 };
 
 exports.listAll = async (page = 1, size = 100) => {
   const offset = (page - 1) * size;
-  const [rows] = await pool.execute(
+  const [rows] = await pool.query(
     'SELECT l.id, l.user_id, l.book_id, b.title, l.borrowed_at, l.due_date, l.returned_at, l.status FROM loans l JOIN books b ON l.book_id = b.id ORDER BY l.borrowed_at DESC LIMIT ? OFFSET ?',
     [size, offset]
   );
-  const [countRows] = await pool.execute('SELECT COUNT(*) as total FROM loans');
+  const [countRows] = await pool.query('SELECT COUNT(*) as total FROM loans');
   return { items: rows, total: countRows[0].total };
 };

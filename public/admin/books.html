@@ -7,15 +7,29 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+  <nav class="nav">
+    <div class="container">
+      <div><a href="/">Library System</a></div>
+      <div>
+        <a href="/admin">Admin</a>
+        <span id="nav-auth"><a href="/auth/login">Login</a></span>
+        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
+      </div>
+    </div>
+  </nav>
   <div class="container">
-    <h1>Manage Books</h1>
-    <button class="button">Add Book</button>
-    <table class="table" style="margin-top:12px">
-      <thead><tr><th>Title</th><th>Author</th><th>Availability</th><th>Actions</th></tr></thead>
-      <tbody>
-        <tr><td>Book A</td><td>Author</td><td>Available</td><td><button class="button">Edit</button> <button class="button">Delete</button></td></tr>
-      </tbody>
-    </table>
+    <aside style="float:left;width:220px;margin-right:24px">
+      <div class="card"><h3>Admin</h3><nav><a href="/admin">Dashboard</a><br><a href="/admin/books">Books</a><br><a href="/admin/loans">Loans</a></nav></div>
+    </aside>
+    <main style="margin-left:240px">
+      <h1>Manage Books</h1>
+      <button class="button">Add Book</button>
+      <table class="table" style="margin-top:12px">
+        <thead><tr><th>Title</th><th>Author</th><th>Availability</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </main>
   </div>
+  <script src="/js/main.js"></script>
 </body>
 </html>

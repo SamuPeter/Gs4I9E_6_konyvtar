@@ -7,16 +7,23 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <nav class="nav"><div class="container"><div><a href="/">Library System</a></div><div><a href="/dashboard">Dashboard</a></div></div></nav>
+  <nav class="nav">
+    <div class="container">
+      <div><a href="/">Library System</a></div>
+      <div>
+        <a href="/books">Books</a>
+        <span id="nav-auth"><a href="/auth/login">Login</a></span>
+        <span id="nav-user" style="display:none"><a href="/dashboard">Dashboard</a> <a href="#" id="logout-btn">Logout</a></span>
+      </div>
+    </div>
+  </nav>
   <main class="container">
     <h1>Books</h1>
     <input class="input" placeholder="Search books...">
     <label style="display:block;margin-top:12px"><input type="checkbox"> Available only</label>
-    <div class="grid" style="margin-top:16px">
-      <div class="card"><h3>Book A</h3><p>Author</p><a href="/books/1" class="button">View Details</a></div>
-      <div class="card"><h3>Book B</h3><p>Author</p><a href="/books/2" class="button">View Details</a></div>
-    </div>
+    <div class="grid" style="margin-top:16px"></div>
   </main>
   <footer class="footer">&copy; Library System</footer>
+  <script src="/js/main.js"></script>
 </body>
 </html>

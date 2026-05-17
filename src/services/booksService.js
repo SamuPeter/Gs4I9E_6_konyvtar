@@ -1,7 +1,19 @@
 const pool = require('../config/db');
 
-exports.list = async () => {
-  const [rows] = await pool.execute('SELECT id, title, author, description, available, created_at FROM books');
+exports.list = async (filter = {}) => {
+  let sql = 'SELECT id, title, author, description, available, created_at FROM books';
+  const params = [];
+  const conditions = [];
+  if (filter.search) {
+    conditions.push('(title LIKE ? OR author LIKE ?)');
+    params.push(`%${filter.search}%`, `%${filter.search}%`);
+  }
+  if (filter.available) {
+    conditions.push('available = 1');
+  }
+  if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
+  sql += ' ORDER BY title';
+  const [rows] = await pool.execute(sql, params);
   return rows;
 };
 
